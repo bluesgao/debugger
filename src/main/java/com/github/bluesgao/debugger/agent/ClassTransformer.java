@@ -2,7 +2,7 @@ package com.github.bluesgao.debugger.agent;
 
 import com.github.bluesgao.debugger.annotation.TraceClass;
 import com.github.bluesgao.debugger.annotation.TraceMethod;
-import com.github.bluesgao.debugger.utils.AgentUtils;
+import com.github.bluesgao.debugger.util.AgentUtils;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;

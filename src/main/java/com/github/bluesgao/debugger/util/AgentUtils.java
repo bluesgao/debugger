@@ -1,4 +1,4 @@
-package com.github.bluesgao.debugger.utils;
+package com.github.bluesgao.debugger.util;
 
 import javassist.CtClass;
 import javassist.NotFoundException;
