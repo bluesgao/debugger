@@ -193,15 +193,21 @@ public class AgentUtils {
         return sb.toString();
     }
 
-    public static boolean ignorClassLoader(final ClassLoader loader) {
+    public static boolean ignoreClassLoader(final ClassLoader loader) {
         if (loader == null) {
             return true;
         }
         final String loaderName = loader.getClass().getCanonicalName();
-        return loaderName.equals("sun.reflect.DelegatingClassLoader") || loaderName.endsWith("com.alibaba.fastjson.util.ASMClassLoader") || loaderName.endsWith("org.apache.jasper.servlet.JasperLoader") || loaderName.startsWith("com.jd.security.") || loaderName.startsWith("jdk.nashorn.");
+        return loaderName.equals("sun.reflect.DelegatingClassLoader") ||
+                loaderName.endsWith("com.alibaba.fastjson.util.ASMClassLoader") ||
+                loaderName.endsWith("org.apache.jasper.servlet.JasperLoader") ||
+                loaderName.startsWith("com.jd.security.") ||
+                loaderName.startsWith("jdk.nashorn.");
     }
 
-    public static boolean ignorClassFile(final String classFile) {
-        return classFile == null || classFile.startsWith("com.sun.proxy.$Proxy") || classFile.startsWith("com/sun/proxy/$Proxy");
+    public static boolean ignoreClassFile(final String classFile) {
+        return classFile == null ||
+                classFile.startsWith("com.sun.proxy.$Proxy") ||
+                classFile.startsWith("com/sun/proxy/$Proxy");
     }
 }

@@ -7,7 +7,4 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface TraceClass {
-    String appName() default "";//应用名称
-
-    String serviceName() default "";//服务名称
 }

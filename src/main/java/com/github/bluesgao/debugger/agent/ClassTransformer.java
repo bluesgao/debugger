@@ -21,12 +21,12 @@ import java.util.logging.Logger;
 public class ClassTransformer implements ClassFileTransformer {
     private static final Logger LOGGER = Logger.getLogger(ClassTransformer.class.getCanonicalName());
     private static final Map<String, TraceMethod> TRACE_METHODS;
-    private static final Map<ClassLoader, ClassPool> POOL_MAP;
+    private static final Map<ClassLoader, ClassPool> CLASS_POOL_MAP;
 
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
         CtClass ctClass = null;
         try {
-            ctClass = getCtClass(classfileBuffer, loader);
+            ctClass = getCtClass(loader, classfileBuffer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -34,9 +34,15 @@ public class ClassTransformer implements ClassFileTransformer {
         if (ctClass != null) {
             return transformByAnnotation(loader, ctClass);
         }
-        return null;
+        return classfileBuffer;
     }
 
+    /**
+     * 基于注解的转换
+     * @param loader
+     * @param ctClass
+     * @return
+     */
     private byte[] transformByAnnotation(ClassLoader loader, CtClass ctClass) {
         try {
             //获取被监控的类
@@ -69,7 +75,7 @@ public class ClassTransformer implements ClassFileTransformer {
             }
 
             if (traceMethods.size() > 0) {
-                return rewriteByteCode(ctClass, traceMethods, loader);
+                return rewriteByteCode(loader, ctClass, traceMethods);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,7 +92,7 @@ public class ClassTransformer implements ClassFileTransformer {
      * @return
      * @throws Exception
      */
-    private static byte[] rewriteByteCode(CtClass ctClass, List<CtMethod> ctMethods, ClassLoader loader) throws Exception {
+    private static byte[] rewriteByteCode(ClassLoader loader, CtClass ctClass, List<CtMethod> ctMethods) throws Exception {
         for (CtMethod ctMethod : ctMethods) {
             try {
                 if (AccessFlag.isPackage(ctMethod.getModifiers())) {
@@ -94,13 +100,13 @@ public class ClassTransformer implements ClassFileTransformer {
                     final String methodName = AgentUtils.getMethodDesc(ctMethod.getName(), ctMethod.getParameterTypes());
 
                     final StringBuffer beforeCode = new StringBuffer();
-                    beforeCode.append(String.format("System.out.println(%s);)", String.format("debugger appName:%s, className:%s, methodName:%s, input:%s \n", "testapp", className, methodName)));
+                    beforeCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, input:%s ", "testapp", className, methodName)));
 
                     final StringBuffer afterCode = new StringBuffer();
-                    afterCode.append(String.format("System.out.println(%s);)", String.format("debugger appName:%s, className:%s, methodName:%s, output:%s \n", "testapp", className, methodName)));
+                    afterCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, output:%s ", "testapp", className, methodName)));
 
                     final StringBuffer catchCode = new StringBuffer();
-                    afterCode.append(String.format("System.out.println(%s);)", String.format("debugger appName:%s, className:%s, methodName:%s, e:%s \n", "testapp", className, methodName)));
+                    afterCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, e:%s ", "testapp", className, methodName)));
 
                     final CtClass throwableClass = ctClass.getClassPool().get(Throwable.class.getCanonicalName());
                     ctMethod.insertBefore(beforeCode.toString());
@@ -158,18 +164,17 @@ public class ClassTransformer implements ClassFileTransformer {
         if (loader == null) {
             return new ClassPool(null);
         } else {
-            ClassPool pool = POOL_MAP.get(loader);
+            ClassPool pool = CLASS_POOL_MAP.get(loader);
             if (pool == null) {
                 pool = new ClassPool(true);
                 pool.appendClassPath(new LoaderClassPath(loader));
-                POOL_MAP.put(loader, pool);
+                CLASS_POOL_MAP.put(loader, pool);
             }
-
             return pool;
         }
     }
 
-    private CtClass getCtClass(byte[] classFileBuffer, ClassLoader classLoader) throws IOException {
+    private CtClass getCtClass(ClassLoader classLoader, byte[] classFileBuffer) throws IOException {
         ClassPool classPool = getClassPool(classLoader);
         CtClass clazz = classPool.makeClass(new ByteArrayInputStream(classFileBuffer), false);
         clazz.defrost();
@@ -178,7 +183,7 @@ public class ClassTransformer implements ClassFileTransformer {
 
 
     static {
-        POOL_MAP = Collections.synchronizedMap(new WeakHashMap());
+        CLASS_POOL_MAP = Collections.synchronizedMap(new WeakHashMap());
         TRACE_METHODS = new ConcurrentHashMap<String, TraceMethod>();
     }
 }
