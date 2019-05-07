@@ -1,4 +1,4 @@
-package com.github.bluesgao.debugger.annotation;
+package com.github.bluesgao.asm.annotation;
 
 import java.lang.annotation.*;
 

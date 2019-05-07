@@ -1,15 +1,17 @@
-package com.github.bluesgao.debugger.agent;
+package com.github.bluesgao.asm;
+
+import com.github.bluesgao.asm.transformer.AsmTransformer;
 
 import java.lang.instrument.Instrumentation;
 
-public class AgentMain {
+public class AsmAgent {
     public static void premain(String agentArgs, Instrumentation inst) {
         init(agentArgs, inst);
     }
 
     private static void init(String agentArgs, Instrumentation inst) {
-        System.out.println("AgentMain init...");
-        inst.addTransformer(new ClassTransformer(), true);
+        System.out.println("AsmAgent init...");
+        inst.addTransformer(new AsmTransformer(), true);
 
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
             public void run() {

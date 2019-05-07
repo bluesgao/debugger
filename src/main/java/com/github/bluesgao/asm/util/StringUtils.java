@@ -1,4 +1,4 @@
-package com.github.bluesgao.debugger.util;
+package com.github.bluesgao.asm.util;
 
 public class StringUtils {
     public static boolean isEmpty(final CharSequence cs) {

@@ -1,8 +1,9 @@
-package com.github.bluesgao.debugger.agent;
+package com.github.bluesgao.asm.transformer;
 
-import com.github.bluesgao.debugger.annotation.TraceClass;
-import com.github.bluesgao.debugger.annotation.TraceMethod;
-import com.github.bluesgao.debugger.util.AgentUtils;
+import com.github.bluesgao.asm.annotation.TraceClass;
+import com.github.bluesgao.asm.annotation.TraceMethod;
+import com.github.bluesgao.asm.bytecode.BytecodeWriter;
+import com.github.bluesgao.asm.util.AgentUtils;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -18,8 +19,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-public class ClassTransformer implements ClassFileTransformer {
-    private static final Logger LOGGER = Logger.getLogger(ClassTransformer.class.getCanonicalName());
+public class AsmTransformer implements ClassFileTransformer {
+    private static final Logger LOGGER = Logger.getLogger(AsmTransformer.class.getCanonicalName());
     private static final Map<String, TraceMethod> TRACE_METHODS;
     private static final Map<ClassLoader, ClassPool> CLASS_POOL_MAP;
 
@@ -32,7 +33,7 @@ public class ClassTransformer implements ClassFileTransformer {
         }
 
         if (ctClass != null) {
-            return transformByAnnotation(loader, ctClass);
+            //return transformByAnnotation(loader, ctClass);
         }
         return classfileBuffer;
     }
@@ -40,10 +41,9 @@ public class ClassTransformer implements ClassFileTransformer {
     /**
      * 基于注解的转换
      * @param loader
-     * @param ctClass
      * @return
      */
-    private byte[] transformByAnnotation(ClassLoader loader, CtClass ctClass) {
+ /*   private byte[] transformByAnnotation(ClassLoader loader, CtClass ctClass) {
         try {
             //获取被监控的类
             TraceClass traceClass = getTraceClass(ctClass);
@@ -75,90 +75,17 @@ public class ClassTransformer implements ClassFileTransformer {
             }
 
             if (traceMethods.size() > 0) {
-                return rewriteByteCode(loader, ctClass, traceMethods);
+                return BytecodeWriter.rewriteByteCode(loader, ctClass, traceMethods);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+*/
 
-    /**
-     * 添加监控语句
-     *
-     * @param ctClass
-     * @param ctMethods
-     * @param loader
-     * @return
-     * @throws Exception
-     */
-    private static byte[] rewriteByteCode(ClassLoader loader, CtClass ctClass, List<CtMethod> ctMethods) throws Exception {
-        for (CtMethod ctMethod : ctMethods) {
-            try {
-                if (AccessFlag.isPackage(ctMethod.getModifiers())) {
-                    final String className = ctClass.getName();
-                    final String methodName = AgentUtils.getMethodDesc(ctMethod.getName(), ctMethod.getParameterTypes());
 
-                    final StringBuffer beforeCode = new StringBuffer();
-                    beforeCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, input:%s ", "testapp", className, methodName)));
 
-                    final StringBuffer afterCode = new StringBuffer();
-                    afterCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, output:%s ", "testapp", className, methodName)));
-
-                    final StringBuffer catchCode = new StringBuffer();
-                    afterCode.append(String.format("System.out.println(%s);", String.format("debugger appName:%s, className:%s, methodName:%s, e:%s ", "testapp", className, methodName)));
-
-                    final CtClass throwableClass = ctClass.getClassPool().get(Throwable.class.getCanonicalName());
-                    ctMethod.insertBefore(beforeCode.toString());
-                    ctMethod.insertAfter(afterCode.toString(), false);
-                    ctMethod.addCatch(catchCode.toString(), throwableClass);
-                }
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-        byte[] bytes = ctClass.toBytecode();
-        ctClass.defrost();
-        return bytes;
-    }
-
-    /**
-     * 获取被监控的类
-     *
-     * @param ctClass
-     * @return
-     */
-    private TraceClass getTraceClass(CtClass ctClass) {
-        TraceClass tc = null;
-        try {
-            tc = (TraceClass) ctClass.getAnnotation(TraceClass.class);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        //接口不需要监控
-        if (tc != null && !ctClass.isInterface()) {
-            return tc;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * 获取被监控的方法
-     *
-     * @param ctMethod
-     * @return
-     */
-    private TraceMethod getTraceMethod(CtMethod ctMethod) {
-        TraceMethod tm = null;
-        try {
-            tm = (TraceMethod) ctMethod.getAnnotation(TraceMethod.class);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return tm;
-    }
 
     public static ClassPool getClassPool(ClassLoader loader) {
         if (loader == null) {

@@ -1,9 +1,12 @@
-package com.github.bluesgao.debugger.config;
+package com.github.bluesgao.asm.config;
 
 import java.util.Map;
 import java.util.Set;
 
-public class AppConfig implements Cloneable {
+/**
+ * 从命令行参数中获取配置信息
+ */
+public class CommondLineConfig implements Config {
     //原始配置字符串
     private String rowCfg;
     //应用名称
@@ -13,5 +16,9 @@ public class AppConfig implements Cloneable {
 
     static {
         //todo 从命令行参数中获取配置信息
+    }
+
+    public Object getConfig() {
+        return null;
     }
 }
