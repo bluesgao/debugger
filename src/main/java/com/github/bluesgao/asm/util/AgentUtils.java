@@ -193,7 +193,7 @@ public class AgentUtils {
         return sb.toString();
     }
 
-    public static boolean ignoreClassLoader(final ClassLoader loader) {
+    public static boolean ignoreClassLoader(ClassLoader loader) {
         if (loader == null) {
             return true;
         }
@@ -205,9 +205,10 @@ public class AgentUtils {
                 loaderName.startsWith("jdk.nashorn.");
     }
 
-    public static boolean ignoreClassFile(final String classFile) {
-        return classFile == null ||
-                classFile.startsWith("com.sun.proxy.$Proxy") ||
-                classFile.startsWith("com/sun/proxy/$Proxy");
+    public static boolean ignoreClass(String className) {
+        return className == null ||
+                className.startsWith("com.sun.proxy.$Proxy") ||
+                className.startsWith("com/sun/proxy/$Proxy") ||
+                className.startsWith("java/");
     }
 }

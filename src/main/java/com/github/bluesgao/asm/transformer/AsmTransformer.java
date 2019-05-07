@@ -1,21 +1,19 @@
 package com.github.bluesgao.asm.transformer;
 
-import com.github.bluesgao.asm.annotation.TraceClass;
 import com.github.bluesgao.asm.annotation.TraceMethod;
-import com.github.bluesgao.asm.bytecode.BytecodeWriter;
 import com.github.bluesgao.asm.util.AgentUtils;
 import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.CtMethod;
 import javassist.LoaderClassPath;
-import javassist.bytecode.AccessFlag;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -25,6 +23,11 @@ public class AsmTransformer implements ClassFileTransformer {
     private static final Map<ClassLoader, ClassPool> CLASS_POOL_MAP;
 
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+        //过滤不需要监控的类
+        if (AgentUtils.ignoreClass(className)) {
+            return null;
+        }
+
         CtClass ctClass = null;
         try {
             ctClass = getCtClass(loader, classfileBuffer);
@@ -40,6 +43,7 @@ public class AsmTransformer implements ClassFileTransformer {
 
     /**
      * 基于注解的转换
+     *
      * @param loader
      * @return
      */
@@ -83,10 +87,6 @@ public class AsmTransformer implements ClassFileTransformer {
         return null;
     }
 */
-
-
-
-
     public static ClassPool getClassPool(ClassLoader loader) {
         if (loader == null) {
             return new ClassPool(null);
